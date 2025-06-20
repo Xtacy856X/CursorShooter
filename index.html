@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>CURSOR SHOOTER</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #001022;
+            cursor: none;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #FFD700;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px #000;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        #livesDisplay {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #heartsCanvas {
+            vertical-align: middle;
+            margin-top: -2px;
+        }
+
+        .menuBox {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            background: #001022cc;
+            border-radius: 24px;
+            border: 2px solid #33dfff;
+            padding: 40px 32px 32px 32px;
+            font-family: 'Press Start 2P', monospace;
+            text-align: center;
+            z-index: 200;
+            box-shadow: 0 0 32px #0009;
+        }
+
+        .profileSlot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #000;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            border-radius: 14px;
+            padding: 12px 24px;
+            margin: 14px 0 0 0;
+            font-size: 18px;
+            width: 410px;
+            transition: background 0.2s, color 0.2s;
+            position: relative;
+        }
+
+            .profileSlot.selected, .profileSlot:hover, .profileSlot:focus {
+                background: #00ffff;
+                color: #001022;
+                outline: none;
+            }
+
+            .profileSlot .renameBtn {
+                background: none;
+                border: none;
+                color: inherit;
+                font-size: 22px;
+                cursor: pointer;
+                margin-left: 12px;
+                padding: 0 3px;
+            }
+
+            .profileSlot input {
+                font-family: inherit;
+                font-size: 18px;
+                border: 1px solid #33dfff;
+                border-radius: 7px;
+                padding: 2px 8px;
+                background: #fff;
+                color: #001022;
+                width: 145px;
+                margin-right: 6px;
+            }
+
+        .highscoreTable {
+            background: #001022d0;
+            color: #FFD700;
+            border-radius: 18px;
+            margin: 28px auto 10px auto;
+            padding: 14px 30px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            box-shadow: 0 0 18px #003;
+            width: 390px;
+        }
+
+        #modeSelect {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            background: #001022cc;
+            border-radius: 24px;
+            border: 2px solid #33dfff;
+            padding: 40px 32px 32px 32px;
+            font-family: 'Press Start 2P', monospace;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 0 32px #0009;
+        }
+
+        .modeBtn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 18px;
+            background: #000;
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            border-radius: 14px;
+            padding: 12px 36px;
+            margin: 18px 20px 0 20px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+            .modeBtn:hover, .modeBtn:focus {
+                background: #00ffff;
+                color: #001022;
+            }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FF4444;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 48px;
+            text-align: center;
+            display: none;
+            text-shadow: 2px 2px 4px #000;
+            z-index: 201;
+        }
+
+        .lang-flag {
+            width: 54px;
+            height: 38px;
+            margin: 0 12px;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 7px #000a;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            object-fit: cover;
+            animation: waving 1.3s infinite alternate;
+        }
+
+            .lang-flag:hover, .lang-flag.selected {
+                border-color: #33dfff;
+                transform: scale(1.09) rotate(-3deg);
+            }
+
+        @keyframes waving {
+            0% {
+                transform: rotate(-5deg) scale(1.00);
+            }
+
+            100% {
+                transform: rotate(5deg) scale(1.04);
+            }
+        }
+
+        .langBox {
+            position: absolute;
+            top: 26%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            z-index: 300;
+            background: #001022f5;
+            border-radius: 28px;
+            padding: 40px 56px 32px 56px;
+            border: 3px solid #33dfff;
+            box-shadow: 0 0 40px #001e;
+            text-align: center;
+        }
+
+        .langBoxTitle {
+            color: #FFD700;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 22px;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="game" tabindex="0"></canvas>
+
+    <div id="creditsScreen" style="display: block; position: absolute; top: 50%; left: 0; transform: translate(0, -50%); min-width: 340px; max-width: 410px; color: #fff; background: #001022cc; border-radius: 18px; border: 3px solid #33dfff; padding: 38px 32px 32px 32px; font-family: Arial, Helvetica, sans-serif; text-align: center; z-index: 500; box-shadow: 0 0 22px #000a; font-size: 22px; letter-spacing: 1px; line-height: 1.5; margin-left: 32px;">
+        <div style="font-size: 27px; color: #FFD700; margin-bottom: 27px;">Game Credits</div>
+        <div style="font-size:21px; margin-bottom: 17px;">Developed by:<br><b>Konstantinos Spitadakis aka Xtacy856X</b></div>
+        <div style="font-size:21px; margin-bottom: 17px;">Background Music:<br><b>Giovanni Antonelli</b></div>
+        <div style="font-size:17px; margin-bottom: 30px; color:#fff;">Special thanks to all my friends for their support.</div>
+    </div>
+
+    <div id="overlay">
+        <span id="gameStats"></span>
+        <div id="livesDisplay">
+            <span></span>
+            <canvas id="heartsCanvas"></canvas>
+        </div>
+    </div>
+
+    <div id="langMenu" class="langBox" style="display:block;">
+        <div class="langBoxTitle" id="langMenuTitle">CHOOSE YOUR LANGUAGE</div>
+        <div>
+            <img src="https://flagcdn.com/gb.svg" alt="English" class="lang-flag" data-lang="en">
+            <img src="https://flagcdn.com/it.svg" alt="Italiano" class="lang-flag" data-lang="it">
+            <img src="https://flagcdn.com/gr.svg" alt="Ελληνικά" class="lang-flag" data-lang="el">
+        </div>
+    </div>
+    <div id="profileMenu" class="menuBox" style="display:none;">
+        <div id="profileMenuTitle" style="font-size:24px; color:#F44; margin-bottom: 18px;"></div>
+        <div id="profileSlots"></div>
+        <div class="highscoreTable" id="highscoreTable">
+            <b id="highscoreTitle"></b>
+            <div id="scoresTableBody"></div>
+        </div>
+        <div id="profileHelp" style="font-size:14px; color:#aaa; margin-top:14px;"></div>
+    </div>
+    <div id="modeSelect" style="display:none;">
+        <div id="modeMenuTitle" style="font-size:24px; color:#F44; margin-bottom: 18px;"></div>
+        <button class="modeBtn" id="btnMouse" tabindex="1"></button>
+        <button class="modeBtn" id="btnClassic" tabindex="2"></button>
+        <div id="modeHelp" style="font-size:15px; color:#aaa; margin-top:20px;"></div>
+    </div>
+    <div id="gameOver"></div>
+    <audio id="sndShoot" src="sounds/shoot.mp3"></audio>
+    <audio id="sndExplosion" src="sounds/explosion.mp3"></audio>
+    <audio id="sndPower" src="sounds/powerup.mp3"></audio>
+    <audio id="sndEngine" src="sounds/engine.mp3" preload="auto" loop></audio>
+    <audio id="sndBackgroundMusic" src="sounds/background_music.wav" loop></audio>
+    <script>
+        // ==== LANGUAGE DICTIONARY ====
+        const LANGS = {
+            en: {
+                chooseLang: "CHOOSE YOUR LANGUAGE",
+                selectProfile: "CHOOSE PROFILE:",
+                highscore: "Highscore Table:",
+                clickProfile: "Click on a profile to play<br>✎ = Rename profile",
+                modeTitle: "CHOOSE GAME MODE:",
+                modeMouse: "1. MOUSE ONLY<br><span style='font-size:15px;color:#fff'>Move with mouse<br>Shoot with left click</span>",
+                modeClassic: "2. CLASSIC<br><span style='font-size:15px;color:#fff'>Move with W/A/D<br>Shoot with left click</span>",
+                modeHelp: "Use mouse or arrows + Enter to select",
+                gameOver: "GAME OVER<br>Press Enter to restart",
+                congrats: "CONGRATULATIONS!<br>You finished the game! Press ENTER to change Profile or continue",
+                score: "Score", level: "Level", highScore: "High Score"
+            },
+            it: {
+                chooseLang: "SCEGLI LA TUA LINGUA",
+                selectProfile: "SCEGLI PROFILO GIOCATORE:",
+                highscore: "Classifica Highscore:",
+                clickProfile: "Clicca su un profilo per giocare<br>✎ = Rinominare il profilo",
+                modeTitle: "SCEGLI MODALITA' DI GIOCO':",
+                modeMouse: "1. SOLO MOUSE<br><span style='font-size:15px;color:#fff'>Movimento col mouse<br>Spara con il click sinistro</span>",
+                modeClassic: "2. CLASSICO<br><span style='font-size:15px;color:#fff'>Movimento con W/A/D<br>Spara con il click sinistro</span>",
+                modeHelp: "Usa il mouse oppure le frecce e Invio per selezionare",
+                gameOver: "GAME OVER<br>Premi Enter per riavviare",
+                congrats: "CONGRATULAZIONI!<br>Hai completato il gioco! Premi ENTER per cambiare Profilo o continuare con lo stesso",
+                score: "Punteggio", level: "Livello", highScore: "High Score"
+            },
+            el: {
+                chooseLang: "ΕΠΕΛΕΞΕ ΓΛΩΣΣΑ",
+                selectProfile: "ΔΙΑΛΕΞΕ ΠΡΟΦΙΛ ΠΑΙΚΤΗ:",
+                highscore: "ΚΑΤΑΤΑΞΗ HIGHSCORE:",
+                clickProfile: "Κάνε κλικ σε προφίλ για να παίξεις<br>✎ = Μετονομασία προφίλ",
+                modeTitle: "ΔΙΑΛΕΞΕ ΤΡΟΠΟ ΠΑΙΧΝΙΔΙΟΥ:",
+                modeMouse: "1. ΜΟΝΟ ΠΟΝΤΙΚΙ<br><span style='font-size:15px;color:#fff'>Μετακίνηση με το ποντίκι<br>Πυροβολείς με το αριστερό κλικ</span>",
+                modeClassic: "2. ΚΛΑΣΣΙΚΟ<br><span style='font-size:15px;color:#fff'>Μετακίνηση με W/A/D<br>Πυροβολείς με το αριστερό κλικ</span>",
+                modeHelp: "Χρησιμοποίησε ποντίκι ή βελάκια + Enter για επιλογή",
+                gameOver: "ΤΕΛΟΣ ΠΑΙΧΝΙΔΙΟΥ<br>Πάτησε Enter για επανεκκίνηση",
+                congrats: "ΣΥΓΧΑΡΗΤΗΡΙΑ!<br>Ολοκλήρωσες το παιχνίδι! Πάτησε ENTER για αλλαγή Προφίλ ή συνέχεια",
+                score: "Βαθμοί", level: "Επίπεδο", highScore: "High Score"
+            }
+        };
+        let currentLang = 'en'; // Default language
+
+        function setLangUI() {
+            document.getElementById('langMenuTitle').textContent = LANGS[currentLang].chooseLang;
+            document.getElementById('profileMenuTitle').textContent = LANGS[currentLang].selectProfile;
+            document.getElementById('highscoreTitle').textContent = LANGS[currentLang].highscore;
+            document.getElementById('profileHelp').innerHTML = LANGS[currentLang].clickProfile;
+            document.getElementById('modeMenuTitle').textContent = LANGS[currentLang].modeTitle;
+            document.getElementById('btnMouse').innerHTML = LANGS[currentLang].modeMouse;
+            document.getElementById('btnClassic').innerHTML = LANGS[currentLang].modeClassic;
+            document.getElementById('modeHelp').innerHTML = LANGS[currentLang].modeHelp;
+        }
+        document.querySelectorAll('.lang-flag').forEach(flag => {
+            flag.onclick = function () {
+                currentLang = flag.getAttribute('data-lang');
+                setLangUI();
+                document.getElementById('langMenu').style.display = "none";
+                document.getElementById('creditsScreen').style.display = "none"; // <-- εδώ εξαφανίζει τα credits!
+                showProfileMenu();
+            };
+        });
+
+
+        // --------- GAME STATE & PROFILE LOGIC ---------
+        const PROFILE_COUNT = 4;
+        const PROFILE_KEY = "CursorShooterProfiles2024";
+        let profiles = [];
+        let currentProfileIdx = 0;
+
+        function getDefaultProfiles() {
+            return [
+                { name: "Player 1", score: 0 },
+                { name: "Player 2", score: 0 },
+                { name: "Player 3", score: 0 },
+                { name: "Player 4", score: 0 }
+            ];
+        }
+        function saveProfiles() {
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles));
+        }
+        function loadProfiles() {
+            const raw = localStorage.getItem(PROFILE_KEY);
+            if (!raw) {
+                profiles = getDefaultProfiles();
+                saveProfiles();
+            } else {
+                try {
+                    profiles = JSON.parse(raw);
+                    if (!Array.isArray(profiles) || profiles.length !== PROFILE_COUNT)
+                        throw "Corrupted";
+                } catch {
+                    profiles = getDefaultProfiles();
+                }
+            }
+        }
+        function showProfileMenu() {
+            loadProfiles();
+            setLangUI();
+            document.getElementById('profileMenu').style.display = "block";
+            document.getElementById('modeSelect').style.display = "none";
+            document.getElementById('gameOver').style.display = "none";
+            let ps = document.getElementById('profileSlots');
+            ps.innerHTML = "";
+            for (let i = 0; i < profiles.length; i++) {
+                let slot = document.createElement('div');
+                slot.className = "profileSlot";
+                slot.tabIndex = 0;
+                slot.innerHTML = `<span><b>${profiles[i].name}</b></span>
+                          <span style="margin-left:20px; color:#FFD700">${LANGS[currentLang].score}: ${profiles[i].score}</span>
+                          <button class="renameBtn" title="Rename">&#9998;</button>`;
+                slot.onclick = () => selectProfile(i);
+                slot.querySelector('.renameBtn').onclick = ev => {
+                    ev.stopPropagation();
+                    renameProfile(i);
+                };
+                ps.appendChild(slot);
+            }
+            updateHighscoreTable();
+        }
+        function updateHighscoreTable() {
+            let body = document.getElementById('scoresTableBody');
+            body.innerHTML = profiles
+                .map((p, i) => `<div>${i + 1}. <b>${p.name}</b> - ${p.score}</div>`)
+                .join("");
+        }
+        function selectProfile(idx) {
+            currentProfileIdx = idx;
+            document.getElementById('profileMenu').style.display = "none";
+            showModeMenu();
+        }
+        function renameProfile(idx) {
+            let newName = prompt(
+                { en: "Enter new name:", it: "Nuovo profilo:", el: "Νέο προφίλ:" }[currentLang],
+                profiles[idx].name
+            );
+            if (!newName) return;
+            profiles[idx].name = newName.substring(0, 16);
+            saveProfiles();
+            showProfileMenu();
+        }
+
+        // ------------ MODE SELECT LOGIC -------------
+        function showModeMenu() {
+            setLangUI();
+            document.getElementById('modeSelect').style.display = "block";
+            let modeBtns = [document.getElementById('btnMouse'), document.getElementById('btnClassic')];
+            modeBtns[0].focus();
+        }
+        document.getElementById('btnMouse').onclick = () => startGame("mouse");
+        document.getElementById('btnClassic').onclick = () => startGame("classic");
+
+        // --------- GAMEPLAY VARS & CLASSES ----------
+        let gameState = {};
+        function startGame(controlMode) {
+            document.getElementById('modeSelect').style.display = "none";
+            document.getElementById('gameOver').style.display = "none";
+            gameState = {
+                score: 0,
+                level: 1,
+                lives: 4,
+                asteroids: [],
+                bullets: [],
+                explosions: [],
+                ship: null,
+                controlMode,
+                mouseX: canvas.width / 2, mouseY: canvas.height / 2,
+                canShoot: true,
+                cheatMode: false,
+                bgOffset: 0,
+                nextHeartScore: 1600,
+                hearts: 4
+            };
+            spawnStars();
+            spawnAsteroids(4);
+            gameState.ship = new Ship();
+            drawHeartsOnCanvas();
+            playBackgroundMusic();
+            isGameActive = true;
+            loop();
+        }
+        function playBackgroundMusic() {
+            let m = document.getElementById('sndBackgroundMusic');
+            m.currentTime = 0;
+            m.play().catch(() => { });
+        }
+        function stopBackgroundMusic() {
+            document.getElementById('sndBackgroundMusic').pause();
+        }
+        function stopAllSounds() {
+            ['sndEngine', 'sndBackgroundMusic'].forEach(id => {
+                let s = document.getElementById(id);
+                s.pause(); s.currentTime = 0;
+            });
+        }
+
+        // ---- STARFIELD ----
+        let stars = [];
+        let bgDirection = 0;
+        let bgSpeed = 1;
+        let bgOffsetX = 0;
+        let bgOffsetY = 0;
+        function spawnStars() {
+            stars = [];
+            let bgDirection = 0;
+            let bgSpeed = 1;
+            let bgOffsetX = 0;
+            let bgOffsetY = 0;
+
+            for (let i = 0; i < 70; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    t: Math.random() < 0.5 ? "+" : "*",
+                    size: Math.random() < 0.6 ? 2 : 3,
+                    color: Math.random() < 0.7 ? "#6ef8ff" : "#caff6e"
+                });
+            }
+        }
+        function drawStars(ctx, speed = 1) {
+            // Update bg offset
+            switch (bgDirection) {
+                case 0: bgOffsetX += bgSpeed; break;                       // δεξιά
+                case 1: bgOffsetY += bgSpeed; break;                       // κάτω
+                case 2: bgOffsetX -= bgSpeed; break;                       // αριστερά
+                case 3: bgOffsetY -= bgSpeed; break;                       // πάνω
+                case 4: bgOffsetX += bgSpeed; bgOffsetY += bgSpeed; break; // διαγώνια δεξιά-κάτω
+                case 5: bgOffsetX -= bgSpeed; bgOffsetY += bgSpeed; break; // διαγώνια αριστερά-κάτω
+            }
+            bgOffsetX = ((bgOffsetX % canvas.width) + canvas.width) % canvas.width;
+            bgOffsetY = ((bgOffsetY % canvas.height) + canvas.height) % canvas.height;
+
+
+            ctx.save();
+            stars.forEach(star => {
+                let baseX = (star.x + bgOffsetX) % canvas.width;
+                let baseY = (star.y + bgOffsetY) % canvas.height;
+
+
+                // Ζωγράφισε το αστέρι σε όλες τις πιθανές "αναδιπλώσεις"
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        let x = baseX + dx * canvas.width;
+                        let y = baseY + dy * canvas.height;
+                        if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+                            ctx.font = `${star.size * 6}px 'Press Start 2P', monospace`;
+                            ctx.fillStyle = star.color;
+                            ctx.globalAlpha = 0.8;
+                            ctx.fillText(star.t, x, y);
+                        }
+                    }
+                }
+
+            });
+            ctx.globalAlpha = 1.0;
+            ctx.restore();
+        }
+
+        // ----- HEARTS UI -----
+        const heartPixelMap = [
+            [0, 1, 1, 0, 1, 1, 0],
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+            [0, 1, 1, 1, 1, 1, 0],
+            [0, 0, 1, 1, 1, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0]
+        ];
+        const pixelSize = 3.5;
+        const singleHeartWidth = heartPixelMap[0].length * pixelSize;
+        const singleHeartHeight = heartPixelMap.length * pixelSize;
+        const heartSpacing = 10;
+        function drawHeartsOnCanvas() {
+            let canvas = document.getElementById('heartsCanvas');
+            let ctx = canvas.getContext('2d');
+            let totalHearts = 10; // Βάλε 6 αν θέλεις μέχρι 6
+            // Βάζει πάντα τόσες θέσεις καρδιάς, αλλά κόκκινες μόνο όσες ζωές έχεις
+            let lives = Math.max(0, Math.min(totalHearts, gameState.lives));
+            canvas.width = (singleHeartWidth * totalHearts) + (heartSpacing * (totalHearts - 1));
+            canvas.height = singleHeartHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < totalHearts; i++) {
+                let currentHeartX = i * (singleHeartWidth + heartSpacing);
+                for (let row = 0; row < heartPixelMap.length; row++) {
+                    for (let col = 0; col < heartPixelMap[row].length; col++) {
+                        if (heartPixelMap[row][col] === 1) {
+                            ctx.fillStyle = (i < lives) ? '#FF0000' : '#444'; // Κόκκινο αν έχεις, γκρι αν δεν έχεις
+                            ctx.fillRect(currentHeartX + col * pixelSize, row * pixelSize, pixelSize, pixelSize);
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        // -------- SHIP, ASTEROIDS, BULLETS ----------
+
+        class Flame {
+            constructor() {
+                this.intensity = 0;  // 0..1
+            }
+            update(isMoving) {
+                if (isMoving) {
+                    this.intensity += 0.17;
+                } else {
+                    this.intensity -= 0.10;
+                }
+                if (this.intensity > 1) this.intensity = 1;
+                if (this.intensity < 0) this.intensity = 0;
+            }
+            draw(ctx, x, y, angle) {
+                if (this.intensity <= 0.01) return;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(toRad(angle));
+                ctx.globalAlpha = this.intensity * 0.85 + 0.1;
+                ctx.fillStyle = 'orange';
+                ctx.beginPath();
+                ctx.moveTo(-15, 0);
+                ctx.lineTo(-27, -7);
+                ctx.lineTo(-27, 7);
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                ctx.restore();
+            }
+        }
+
+        class Ship {
+            constructor() {
+                this.x = canvas.width / 2; this.y = canvas.height / 2;
+ this.radius = 18; this.angle = 0; this.speed = 0; this.cooldown = 0;
+                this.flame = new Flame();
+            }
+            update() {
+                let keys = window._pressedKeys || {};
+                let isMoving = false;
+
+                if (gameState.controlMode === "classic") {
+                    let pressingW = keys['w'] || keys['W'] || keys['ς'];
+                    if (pressingW) {
+                        this.speed += 0.1;
+                        isMoving = true;
+                    }
+                    if (keys['a'] || keys['A'] || keys['α'] || keys['Α']) this.angle -= 2;
+                    if (keys['d'] || keys['D'] || keys['δ'] || keys['Δ']) this.angle += 2;
+
+                    this.speed *= 0.98;
+                    this.x += Math.cos(toRad(this.angle)) * this.speed;
+                    this.y += Math.sin(toRad(this.angle)) * this.speed;
+                }
+                if (gameState.controlMode === "mouse") {
+                    let dx = gameState.mouseX - this.x, dy = gameState.mouseY - this.y;
+                    this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    let dist = Math.hypot(dx, dy);
+                    const MAX_SHIP_SPEED = 6; 
+                    if (dist > 20) {
+                        this.speed = Math.min(MAX_SHIP_SPEED, dist); // το dist βοηθάει να σταματήσει πριν φτάσει ακριβώς στο σημείο
+                        this.x += Math.cos(toRad(this.angle)) * this.speed;
+                        this.y += Math.sin(toRad(this.angle)) * this.speed;
+                        isMoving = true;
+                    } else {
+                        this.speed = 0;
+                    }
+                }
+if (this.cooldown > 0) this.cooldown--;
+
+                // wrap
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+
+
+
+                this.flame.update(isMoving); // ενημερώνει intensity της φλόγας
+                // --- ENGINE SOUND CONTROL ---
+                let sndEngine = document.getElementById('sndEngine');
+                if (isMoving) {
+                    if (sndEngine.paused) {
+                        sndEngine.currentTime = 0;
+                        sndEngine.play().catch(() => { });
+                    }
+                } else {
+                    sndEngine.pause();
+                }
+            }
+            draw(ctx) {
+                this.flame.draw(ctx, this.x, this.y, this.angle);
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(toRad(this.angle));
+                ctx.strokeStyle = '#00FFCC';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(20, 0);
+                ctx.lineTo(-15, -12);
+                ctx.lineTo(-8, 0);
+                ctx.lineTo(-15, 12);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        class Bullet {
+            constructor(x, y, angle) {
+                this.x = x; this.y = y; this.angle = angle; this.speed = 8; this.radius = 3;
+            }
+            update() {
+                this.x += Math.cos(toRad(this.angle)) * this.speed;
+                this.y += Math.sin(toRad(this.angle)) * this.speed;
+            }
+            draw(ctx) {
+                ctx.fillStyle = '#FE00FF';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            offscreen() {
+    return this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height;
+            }
+        }
+        class Asteroid {
+            constructor(x, y, size = 3, speedBoost = 1, hasHeart = false) {
+                this.x = x; this.y = y; this.size = size;
+                this.radius = size * (18 + Math.random() * 6);
+                const possibleSides = [5, 6, 7];
+                this.sides = possibleSides[Math.floor(Math.random() * possibleSides.length)];
+                this.angle = Math.random() * 360;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() - 0.5;
+                this.baseSpeed = (4 - size) * 0.6 + Math.random() * 0.6;
+                this.speed = this.baseSpeed * speedBoost;
+                this.verticeOffsets = [];
+                for (let i = 0; i < this.sides; i++) this.verticeOffsets.push(0.75 + Math.random() * 0.5);
+                this.hasHeart = hasHeart;
+            }
+            update() {
+                this.x += Math.cos(toRad(this.angle)) * this.speed;
+                this.y += Math.sin(toRad(this.angle)) * this.speed;
+                if (this.x < -this.radius) this.x = canvas.width + this.radius;
+                if (this.x > canvas.width + this.radius) this.x = -this.radius;
+                if (this.y < -this.radius) this.y = canvas.height + this.radius;
+                if (this.y > canvas.height + this.radius) this.y = -this.radius;
+                this.rotation += this.rotationSpeed;
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(toRad(this.rotation));
+                ctx.fillStyle = '#1A334B';
+                ctx.strokeStyle = '#41F9FF';
+                ctx.lineWidth = 2.5;
+
+                // Σώμα κομήτη
+                ctx.beginPath();
+                for (let i = 0; i < this.sides; i++) {
+                    let angle = (i / this.sides) * Math.PI * 2;
+                    let r = this.radius * this.verticeOffsets[i];
+                    let px = Math.cos(angle) * r, py = Math.sin(angle) * r;
+                    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // === ΑΣΗΜΕΝΙΟ-ΓΚΡΙ ΕΦΕ ===
+                let innerR = this.radius * 0.45;
+                let gradient = ctx.createRadialGradient(0, 0, 2, 0, 0, innerR);
+                let alpha = 0.25 + 0.35 * Math.abs(Math.sin(Date.now() / 140 + this.x));
+                gradient.addColorStop(0, `rgba(220,220,220,${alpha})`);
+                gradient.addColorStop(1, `rgba(120,130,140,0)`);
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.beginPath();
+                ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over';
+
+                // Καρδιά αν υπάρχει
+                if (this.hasHeart) {
+                    ctx.fillStyle = "#ff2828";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 0.35, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.font = "bold 18px Arial";
+                    ctx.fillStyle = "#fff";
+                    ctx.textAlign = "center";
+                    ctx.fillText("♥", 0, 8);
+                }
+
+                ctx.restore();
+            }
+        }
+
+
+
+
+        // ---------- GAME LOGIC -----------
+        function spawnAsteroids(count) {
+            let speedBoost = Math.pow(1.06, gameState.level - 1);
+            for (let i = 0; i < count; i++) {
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                if (Math.hypot(x - canvas.width / 2, y - canvas.height / 2) < 150) { i--; continue; }
+                let hasHeart = false;
+                if (gameState.score >= gameState.nextHeartScore) {
+                    hasHeart = true; gameState.nextHeartScore += 1600;
+                }
+                gameState.asteroids.push(new Asteroid(x, y, 3, speedBoost, hasHeart));
+            }
+        }
+        function toRad(deg) { return deg * Math.PI / 180; }
+
+        function loop() {
+            if (!isGameActive) return;
+            let ctx = document.getElementById('game').getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawStars(ctx, 1 + (gameState.level - 1) * 0.08);
+            if (gameState.ship) gameState.ship.draw(ctx);
+            gameState.bullets.forEach(b => b.draw(ctx));
+            gameState.asteroids.forEach(a => a.draw(ctx));
+            // Explosions
+            gameState.explosions = gameState.explosions.filter(e => e.frames > 0);
+            gameState.explosions.forEach(e => { e.draw(ctx); });
+            // UI
+            drawUI();
+            // Update logic
+            if (gameState.ship) {
+                gameState.ship.update();
+                // Bullets
+                let removeB = new Set();
+                gameState.bullets.forEach((b, bi) => {
+                    b.update();
+                    if (b.offscreen()) removeB.add(bi);
+                });
+                // Asteroids
+                let removeA = new Set(), addA = [];
+                gameState.asteroids.forEach((a, ai) => {
+                    a.update();
+                    // Bullet collision
+                    gameState.bullets.forEach((b, bi) => {
+                        if (removeB.has(bi) || removeA.has(ai)) return;
+                        if (Math.hypot(b.x - a.x, b.y - a.y) < a.radius) {
+                            removeB.add(bi); // bullet gone
+                            // points by size
+                            let pts = a.size === 3 ? 10 : a.size === 2 ? 15 : 30;
+                            gameState.score += pts;
+                            // spawn heart pickup if hasHeart
+                            if (a.hasHeart) {
+                                gameState.explosions.push(new HeartPickup(a.x, a.y));
+                            }
+                            // Split
+                            gameState.explosions.push(new Explosion(a.x, a.y));
+                            if (a.size === 3) {
+                                addA.push(new Asteroid(a.x + 10, a.y + 10, 2, Math.pow(1.06, gameState.level - 1)));
+                                addA.push(new Asteroid(a.x - 10, a.y - 10, 2, Math.pow(1.06, gameState.level - 1)));
+                            } else if (a.size === 2) {
+                                addA.push(new Asteroid(a.x + 7, a.y + 7, 1, Math.pow(1.06, gameState.level - 1)));
+                                addA.push(new Asteroid(a.x - 7, a.y - 7, 1, Math.pow(1.06, gameState.level - 1)));
+                            }
+                            removeA.add(ai);
+                            document.getElementById('sndExplosion').currentTime = 0;
+                            document.getElementById('sndExplosion').play();
+                        }
+                    });
+                    // Ship collision
+                    if (!removeA.has(ai) && Math.hypot(gameState.ship.x - a.x, gameState.ship.y - a.y) < a.radius + gameState.ship.radius) {
+                        removeA.add(ai);
+                        gameState.lives--;
+                        drawHeartsOnCanvas();
+                        gameState.explosions.push(new Explosion(gameState.ship.x, gameState.ship.y));
+                        document.getElementById('sndExplosion').currentTime = 0;
+                        document.getElementById('sndExplosion').play();
+                        if (gameState.lives <= 0) {
+                            showGameOver();
+                            return;
+                        } else {
+                            gameState.ship = new Ship();
+                        }
+                    }
+                });
+                // Remove dead
+                gameState.asteroids = gameState.asteroids.filter((_, i) => !removeA.has(i));
+                gameState.bullets = gameState.bullets.filter((_, i) => !removeB.has(i));
+                gameState.asteroids.push(...addA);
+                // Explosions animate
+                gameState.explosions.forEach(e => { if (e.update) e.update(); });
+                // Level up
+                if (gameState.asteroids.length === 0) {
+                    gameState.level++;
+                    // Αυξάνει την ταχύτητα και αλλάζει κατεύθυνση background
+                    bgSpeed = 1 + (gameState.level - 1) * 0.7; // Πιο μεγάλη αύξηση όσο θες
+                    bgDirection = (bgDirection + 1) % 6; // Εναλλάσσει 6 κατευθύνσεις
+
+                    if (gameState.level > 10) {
+                        showCongratulations();
+                        return;
+                    }
+                    spawnAsteroids(3 + gameState.level);
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // ------- UI -------
+        function drawUI() {
+            document.getElementById('gameStats').textContent = `${LANGS[currentLang].score}: ${gameState.score}   ${LANGS[currentLang].level}: ${gameState.level}`;
+            drawHeartsOnCanvas();
+        }
+        // ------- Explosions & Heart ---------
+        class Explosion {
+            constructor(x, y) { this.x = x; this.y = y; this.frames = 30; }
+            draw(ctx) {
+                ctx.fillStyle = `rgba(255,128,0,${this.frames / 30})`;
+                ctx.beginPath(); ctx.arc(this.x, this.y, 30 - this.frames, 0, Math.PI * 2); ctx.fill(); this.frames--;
+            }
+        }
+        class HeartPickup {
+            constructor(x, y) { this.x = x; this.y = y; this.frames = 60; }
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.frames / 60;
+                ctx.font = "32px Arial";
+                ctx.fillStyle = "#ff2828";
+                ctx.fillText("♥", this.x - 12, this.y + 12);
+                ctx.restore();
+                this.frames--;
+            }
+            update() {
+                if (this.frames === 30) {
+                    // add life if < 8
+                    if (gameState.lives < 8) gameState.lives++;
+                    drawHeartsOnCanvas();
+                    document.getElementById('sndPower').currentTime = 0;
+                    document.getElementById('sndPower').play();
+                }
+            }
+        }
+
+        // ------- Game Over / Congrats -------
+        function showGameOver() {
+            stopAllSounds();
+            isGameActive = false;
+            document.getElementById('gameOver').style.display = "block";
+            document.getElementById('gameOver').innerHTML = LANGS[currentLang].gameOver;
+            // update highscore for profile
+            if (gameState.score > profiles[currentProfileIdx].score) {
+                profiles[currentProfileIdx].score = gameState.score;
+                saveProfiles();
+                updateHighscoreTable();
+            }
+        }
+        function showCongratulations() {
+            stopAllSounds();
+            document.getElementById('gameOver').style.display = "block";
+            document.getElementById('gameOver').innerHTML = LANGS[currentLang].congrats;
+            if (gameState.score > profiles[currentProfileIdx].score) {
+                profiles[currentProfileIdx].score = gameState.score;
+                saveProfiles();
+                updateHighscoreTable();
+            }
+        }
+
+        // ------------- INPUT -------------
+        window._pressedKeys = {};
+        window.addEventListener('keydown', e => {
+            window._pressedKeys[e.key] = true;
+            if (document.getElementById('gameOver').style.display === "block" && (e.key === "Enter" || e.key === " ")) {
+                document.getElementById('gameOver').style.display = "none";
+                showProfileMenu();
+            }
+        });
+        window.addEventListener('keyup', e => { window._pressedKeys[e.key] = false; });
+
+        let canvas = document.getElementById('game');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        canvas.addEventListener('mousemove', e => {
+            let rect = canvas.getBoundingClientRect();
+            gameState.mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            gameState.mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        });
+        canvas.addEventListener('mousedown', e => {
+            if (!gameState.ship) return;
+            if (e.button !== 0) return;
+            if (gameState.ship.cooldown <= 0) {
+                let bulletsCount = 1;
+                if (gameState.level >= 7) bulletsCount = 3;
+                else if (gameState.level >= 2) bulletsCount = 2;
+                let baseAngle = gameState.ship.angle;
+                let spread = (bulletsCount === 3) ? 15 : 8;
+                for (let i = 0; i < bulletsCount; i++) {
+                    let ang = baseAngle + (i - ((bulletsCount - 1) / 2)) * spread;
+                    gameState.bullets.push(new Bullet(
+                        gameState.ship.x + Math.cos(toRad(ang)) * gameState.ship.radius,
+                        gameState.ship.y + Math.sin(toRad(ang)) * gameState.ship.radius,
+                        ang
+                    ));
+                }
+                document.getElementById('sndShoot').currentTime = 0;
+                document.getElementById('sndShoot').play();
+                gameState.ship.cooldown = 15;
+            }
+        });
+
+        // ------------- START: show lang menu -------------
+        setLangUI();
+        document.getElementById('langMenu').style.display = "block";
+    </script>
+</body>
+</html>
