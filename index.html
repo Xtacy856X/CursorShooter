@@ -261,6 +261,53 @@
     <audio id="sndEngine" src="sounds/engine.mp3" preload="auto" loop></audio>
     <audio id="sndBackgroundMusic" src="sounds/background_music.wav" loop></audio>
     <script>
+        const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+        if (isMobile) {
+            document.getElementById('analogStick').style.display = 'flex';
+            document.getElementById('shootButton').style.display = 'block';
+        } else {
+            document.getElementById('analogStick').style.display = 'none';
+            document.getElementById('shootButton').style.display = 'none';
+        }
+        let analogStick = document.getElementById('analogStick');
+        let stick = analogStick.querySelector('.stick');
+        let mouseX = 0, mouseY = 0;
+        
+        analogStick.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            let rect = analogStick.getBoundingClientRect();
+            let x = e.touches[0].clientX - rect.left;
+            let y = e.touches[0].clientY - rect.top;
+            moveStick(x, y);
+        });
+        
+        analogStick.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            let rect = analogStick.getBoundingClientRect();
+            let x = e.touches[0].clientX - rect.left;
+            let y = e.touches[0].clientY - rect.top;
+            moveStick(x, y);
+        });
+        
+        function moveStick(x, y) {
+            let centerX = analogStick.clientWidth / 2;
+            let centerY = analogStick.clientHeight / 2;
+            let angle = Math.atan2(y - centerY, x - centerX);
+            let distance = Math.min(50, Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)));
+            stick.style.transform = `translate(${distance * Math.cos(angle)}px, ${distance * Math.sin(angle)}px)`;
+            mouseX = centerX + distance * Math.cos(angle);
+            mouseY = centerY + distance * Math.sin(angle);
+        }
+        
+        document.getElementById('shootButton').addEventListener('click', () => {
+            // Implement shoot logic here (shoot a bullet)
+            shootBullet();
+        });
+        
+        function shootBullet() {
+            const bullet = new Bullet(gameState.ship.x, gameState.ship.y, gameState.ship.angle);
+            gameState.bullets.push(bullet);
+        }
         // ==== LANGUAGE DICTIONARY ====
         const LANGS = {
             en: {
